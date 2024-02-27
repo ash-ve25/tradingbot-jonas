@@ -23,25 +23,12 @@ class TradingController {
     host: '38.242.242.82',
     user: 'dbuser',
     password: 'A2Q8J7dCSNvkEM!25',
-    database: 'tradeDb'
+    database: 'tradeDb',
+    connectionLimit: 2
   }
   //Method to check the account information for each trade pair(if exist)
   public getAccountInfo = async (req: Request | any, res: Response, next: NextFunction) => {    
-    
-    const pool = mysql.createPool(this.dbConfig);
-    pool.getConnection((err, connection) => {
-      let sql = 'SELECT count(*) FROM master_traders where is_trade_open=0 and follower_count > 0';
-      if (err) {
-        console.log('query connec error!', err);        
-      } else {
-        connection.query(sql, (err, results) => {
-          if (err) {            
-          } else {
-            console.log(results);
-          }
-        });
-      }
-    })
+      
     // let response = await this.binance.futuresOrderStatus('LTCUSDT',{orderId: 521389596});
     let response = await this.binance.futuresAccount();
     console.log("balance:", response.availableBalance);
@@ -239,30 +226,12 @@ class TradingController {
       console.log("trade rejected for probablity OR closeTime")
       await this.updateLiveTrade(2);
     }
-    });    
-    return new Promise(async (resolve, reject) => {
-      const pool = mysql.createPool(this.dbConfig);
-      pool.getConnection((err, connection) => {
-        let sql = 'SELECT * from live_trades lt where PredictionValue = 1 and PredictionProbability >= 0.9 order by transactTimeE3 desc;';
-        if (err) {
-          console.log('query connec error!', err);        
-        } else {
-          connection.query(sql, (err, results) => {
-            if (err) {            
-            } else {
-              trades = results;
-              // console.log(results);
-              
-            }
-          });
-        }
-      })        
-    });
+    });        
   }
 
   public updateLiveTrade = (value) => {    
-    return new Promise((resolve, reject) => {
-      const pool = mysql.createPool(this.dbConfig);
+    const pool = mysql.createPool(this.dbConfig);
+    return new Promise((resolve, reject) => {      
       pool.getConnection((err, connection) => {
         if (err) {
           console.log('query connec error!', err);
@@ -278,12 +247,13 @@ class TradingController {
           });
         }
       });
+      // pool.end();
     });
   }
 
   public fetchTradersFromDatabase = () => {
-    return new Promise((resolve, reject) => {
-      const pool = mysql.createPool(this.dbConfig);
+    const pool = mysql.createPool(this.dbConfig);
+    return new Promise((resolve, reject) => {      
       pool.getConnection((err, connection) => {
         if (err) {
           console.log('query connec error!', err);
@@ -300,6 +270,7 @@ class TradingController {
           });
         }
       });
+      // pool.end();
     });
   };
   //Method to close all trades on binance
