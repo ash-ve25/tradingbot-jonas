@@ -229,10 +229,10 @@ class TradingController {
     });        
   }
 
+  pool:any = mysql.createPool(this.dbConfig);
   public updateLiveTrade = (value) => {    
-    const pool = mysql.createPool(this.dbConfig);
     return new Promise((resolve, reject) => {      
-      pool.getConnection((err, connection) => {
+      this.pool.getConnection((err, connection) => {
         if (err) {
           console.log('query connec error!', err);
           reject(err);
@@ -252,9 +252,9 @@ class TradingController {
   }
 
   public fetchTradersFromDatabase = () => {
-    const pool = mysql.createPool(this.dbConfig);
+    // const pool = mysql.createPool(this.dbConfig);
     return new Promise((resolve, reject) => {      
-      pool.getConnection((err, connection) => {
+      this.pool.getConnection((err, connection) => {
         if (err) {
           console.log('query connec error!', err);
           reject(err);
