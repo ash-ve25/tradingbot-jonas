@@ -1,0 +1,36 @@
+import { config } from 'dotenv';
+config({ path: `.env.${process.env.NODE_ENV || 'development'}` });
+
+export const CREDENTIALS = process.env.CREDENTIALS === 'true';
+export const {
+  REDIS,
+  NODE_ENV,
+  PORT,
+  LOG_FORMAT,
+  LOG_DIR,
+  ORIGIN,
+  JWT_ACCESS_KEY,
+  BASEURL,
+  APIKEY,
+  DB_USERNAME,
+  DB_PASSWORD,
+  DB_URL,
+  API_KEY_FAST2SMS,
+  LOCAL_DB_URL,
+  REDIS_HOST,
+  REDIS_PASSWORD,
+  REDIS_PORT,
+  REDIS_USERNAME,
+  ACCESS_KEY,
+  SECRET_KEY,
+  BINANCE_ACCESS_KEY,
+  BINANCE_SECRET_KEY,
+  BINANCE_SPOT_API_KEY,
+  BINANCE_SPOT_SECRET_KEY,
+  BYBIT_ACCESS_KEY,
+  BYBIT_SECRET_KEY,
+  PHEMEX_ACCESS_KEY,
+  PHEMEX_SECRET_KEY,
+  SENDGRIDAPIKEY,
+  FROM_ADDRESS
+} = process.env;

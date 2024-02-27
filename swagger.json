@@ -1,0 +1,73 @@
+{
+    "swagger": "2.0",
+    "info": {
+        "description": "This Is Secvolt-Screener Server Documentation.",
+        "version": "1.0.0",
+        "title": "Secvolt-Screener",
+        "contact": {
+            "email": "apiteam@secvolt.io"
+        },
+        "license": {
+            "name": "Apache 2.0",
+            "url": "http://www.apache.org/licenses/LICENSE-2.0.html"
+        }
+    },
+    "host": "dev.secvolt-screener.io",
+    "basePath": "/api",
+    "securityDefinitions": {},
+    "tags": [
+        {
+            "name": "auth",
+            "description": "Operations about Authentication"
+        }
+    ],
+    "schemes": [
+        "https",
+        "http"
+    ],
+    "paths": {
+        "/v1/auth/login": {
+            "post": {
+                "tags": [
+                    "auth"
+                ],
+                "summary": "Logs user into the system",
+                "description": "",
+                "parameters": [
+                    {
+                        "in": "body",
+                        "name": "body",
+                        "description": "Mobile Number for login",
+                        "required": true,
+                        "schema": {
+                            "type": "object",
+                            "required": [
+                                "mobileNo",
+                                "code"
+                            ],
+                            "properties": {
+                                "mobileNo": {
+                                    "type": "string",
+                                    "example": "9867270324"
+                                },
+                                "code": {
+                                    "type": "string",
+                                    "example": "12356"
+                                }
+                            }
+                        }
+                    }
+                ],
+                "responses": {
+                    "200": {
+                        "description": "successful operation"
+                    },
+                    "406": {
+                        "description": "not acceptable operation"
+                    }
+                }
+            }
+        }
+    },
+    "definations": {}
+}
