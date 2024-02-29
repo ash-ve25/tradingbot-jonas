@@ -141,7 +141,7 @@ class TradingController {
   };
 
   public checktradeforCron = async () => {        
-    let trades: any = await this.fetchTradersFromDatabase();
+    let trades: any = await this.fetchTradesFromDatabase();
     trades.forEach(async row => {
       //Rule1: Condition1: Check for the predicted probablity of trade success, if greater tha 0.9 OR 90%, take the trade else leave it
     //Rule1: Condition2: Additionally, take tha trades only if the signal trade is not closed.
@@ -206,31 +206,44 @@ class TradingController {
               console.log("order executed successfully!: ", order);            
               await this.updateLiveTrade(1);
             }                      
-        } else if(body.includes('close')){
-          //Rule2: check for the signal from Junaid, if it is close, close the current trade          
-          let futurePosition = await this.binance.futuresPositionRisk({ symbol: ticker });
-          //if position already exist, close it.
-          if (futurePosition[0].positionAmt > 0) {
-            let quantity = Math.abs(JSON.parse(futurePosition[0].positionAmt));
-            let newOrder = await this.binance.futuresMarketBuy(ticker, quantity, {
-              newOrderRespType: 'RESULT',
-              positionSide: 'LONG'
-            });
-            console.log("Order closed: ", newOrder);            
-          }
         }
       } catch (error) {
         console.log(error);
       }
     }else{
-      console.log("trade rejected for probablity OR closeTime")
-      await this.updateLiveTrade(2);
+      if(row.isTradeExecuted == 1){
+          //Rule2: check for the signal from Junaid, if it is close, close the current trade          
+          let futurePosition = await this.binance.futuresPositionRisk({ symbol: row.symbol });
+          //if position already exist, close it.
+          if (futurePosition[0].positionAmt > 0) {
+            let quantity = Math.abs(JSON.parse(futurePosition[0].positionAmt));
+            if(row.side == 'Sell'){//short            
+              let newOrder = await this.binance.futuresMarketBuy(row.symbol, quantity, {
+                newOrderRespType: 'RESULT',
+                positionSide: 'LONG'
+              });
+              console.log("Short Order closed: ", newOrder);
+              await this.updateLiveTrade(3);
+            }else if(row.side == 'Buy'){//Long
+              let newOrder = await this.binance.futuresMarketSell(row.symbol, quantity, {
+                newOrderRespType: 'RESULT',
+                positionSide: 'SHORT'
+              });
+              console.log("LONG Order closed: ", newOrder);
+              await this.updateLiveTrade(3);
+            }
+          }
+      }else{
+        console.log("trade rejected for probablity OR closeTime")
+        await this.updateLiveTrade(2);
+      }
     }
     });        
   }
 
   pool:any = mysql.createPool(this.dbConfig);
   public updateLiveTrade = (value) => {    
+    //isTradeExecuted has 0,1,2,3 values. 0 means not executed, 1 means executed, 2 means rejected, 3 means executed & then closed.
     return new Promise((resolve, reject) => {      
       this.pool.getConnection((err, connection) => {
         if (err) {
@@ -251,7 +264,7 @@ class TradingController {
     });
   }
 
-  public fetchTradersFromDatabase = () => {
+  public fetchTradesFromDatabase = () => {
     // const pool = mysql.createPool(this.dbConfig);
     return new Promise((resolve, reject) => {      
       this.pool.getConnection((err, connection) => {
@@ -259,7 +272,7 @@ class TradingController {
           console.log('query connec error!', err);
           reject(err);
         } else {          
-          connection.query('SELECT * from live_trades lt where PredictionValue = 1 and PredictionProbability >= 0.9 and isTradeExecuted = 0 order by transactTimeE3 desc;', (err, results) => {
+          connection.query('SELECT * from live_trades lt where PredictionValue = 1 and PredictionProbability >= 0.9 and isTradeExecuted in (0,1);', (err, results) => {
             if (err) {
               reject(err);
             } else {
@@ -273,6 +286,7 @@ class TradingController {
       // pool.end();
     });
   };
+  
   //Method to close all trades on binance
   public closePositions = async (req: Request | any, res: Response, next: NextFunction) => {
     
